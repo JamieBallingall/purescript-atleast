@@ -55,7 +55,7 @@ module Data.Array.ArrayAL
   , nubByEq
 
   , zipWith
-  , selfZipWith
+  , offsetWith
 
   , checkValid
   ) where
@@ -499,11 +499,11 @@ zipWith
   -> ArrayAL n c
 zipWith fn (ArrayAL xs) (ArrayAL ys) = ArrayAL $ Array.zipWith fn xs ys
 
-foreign import selfZipWithImpl
+foreign import offsetWithImpl
   :: ∀ a b. Int -> (a -> a -> b) -> Array a -> Array b
 
 -- | Apply a binary function to offset copies of an `ArrayAL`
-selfZipWith
+offsetWith
   :: ∀ (n1 :: Int)
        (n2 :: Int)
        (offset :: Int)
@@ -519,7 +519,7 @@ selfZipWith
   -> (a1 -> a1 -> a2)
   -> ArrayAL n1 a1
   -> ArrayAL n2 a2
-selfZipWith i f (ArrayAL xs) = ArrayAL $ selfZipWithImpl (reflectType i) f xs
+offsetWith i f (ArrayAL xs) = ArrayAL $ offsetWithImpl (reflectType i) f xs
 
 -- | Return true if the length of the underlying array is less than or equal to
 -- | the type-level minimum length. This should always be true and this function

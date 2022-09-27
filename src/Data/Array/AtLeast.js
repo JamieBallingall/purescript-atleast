@@ -4,7 +4,7 @@ export const rawIndex = function(i) {
   }
 }
 
-export const selfZipWithImpl = function (offset) {
+export const offsetWithImpl = function (offset) {
   return function (operator) {
     return function(xs) {
       let xsLen = xs.length;
