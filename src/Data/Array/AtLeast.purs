@@ -1,4 +1,4 @@
-module ArrayAL
+module Data.Array.ArrayAL
   ( ArrayAL -- Constructor not exported. Use fromArray, fromArray' or similar
 
   , fromArray
