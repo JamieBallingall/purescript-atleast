@@ -5,6 +5,7 @@
   , "enums"
   , "fast-vect"
   , "foldable-traversable"
+  , "integers"
   , "maybe"
   , "partial"
   , "prelude"

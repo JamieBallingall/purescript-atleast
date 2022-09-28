@@ -3,12 +3,14 @@ module Data.Int.AtLeast
   , fromInt
   , fromInt'
   , toInt
+  , toNumber
   , (%+%), plus
   , (%-%), minus
   , (%*%), times
   , (%/%), quotient
   , modulo
   , remainder
+  , divide
   , weaken
   , strengthen
   , gcd
@@ -24,6 +26,7 @@ import Data.Array (length) as Array
 import Data.Array.NonEmpty (NonEmptyArray, cons', length, singleton) as NEA
 import Data.Enum (class Enum)
 import Data.EuclideanRing (gcd) as Int
+import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Nothing, Just))
 import Data.Reflectable (class Reflectable, reflectType)
 import Partial (crashWith)
@@ -84,6 +87,10 @@ fromInt' i =
 toInt :: ∀ (min :: Int). IntAL min -> Int
 toInt (IntAL i) = i
 
+-- | Convert an `IntAL` to a Number
+toNumber :: ∀ (min :: Int). IntAL min -> Number
+toNumber (IntAL i) = Int.toNumber i
+
 -- | Add two IntAL values with possibly different type-level minimums
 plus
   :: ∀ (min_i :: Int) (min_j :: Int) (min_sum :: Int)
@@ -130,7 +137,7 @@ quotient (IntAL i) (IntAL j) = IntAL $ div i j
 infixl 7 quotient as %/%
 
 -- | Compute the remainder after division of one `IntAL` by another, returning
--- | an `IntAL 0`. Similar to `mod` by accepts and returns `IntAL`
+-- | an `IntAL 0`. Similar to `mod` by accepts and returns `IntAL 0`
 modulo :: ∀ (min_i :: Int) (min_j :: Int). IntAL min_i -> IntAL min_j -> IntAL 0
 modulo (IntAL i) (IntAL j) = remainder i j
 
@@ -138,6 +145,10 @@ modulo (IntAL i) (IntAL j) = remainder i j
 -- | `IntAL 0`. Identical to `mod` but returns an `IntAL 0`
 remainder :: Int -> Int -> IntAL 0
 remainder i j = IntAL (mod i j)
+
+-- | Divide one `IntAL` by another, returning a Number
+divide :: ∀ (min_i :: Int) (min_j :: Int). IntAL min_i -> IntAL min_j -> Number
+divide i j = toNumber i / toNumber j
 
 -- | Decrease the type-level minimum value without changing the runtime value
 weaken
