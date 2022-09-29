@@ -1,13 +1,19 @@
 module Data.Int.AtLeast
-  ( IntAL -- Constructor not exported. Use fromInt or fromInt'
+  ( IntAL -- Constructor not exported. Use fromInt, fromInt' or clamp
   , fromInt
   , fromInt'
+  , clamp
   , toInt
   , toNumber
-  , (%+%), plus
-  , (%-%), minus
-  , (%*%), times
-  , (%/%), quotient
+  , extent
+  , (%+%)
+  , plus
+  , (%-%)
+  , minus
+  , (%*%)
+  , times
+  , (%/%)
+  , quotient
   , modulo
   , remainder
   , divide
@@ -54,34 +60,47 @@ instance Reflectable min Int => Enum (IntAL min) where
     if n > reflectType (Proxy :: _ min) then Just (IntAL $ n - 1) else Nothing
 
 instance Reflectable min Int => Show (IntAL min) where
-  show (IntAL i) = "IntAL " <> show (reflectType (Proxy :: _ min)) <> " " <> show i
+  show (IntAL i) = "IntAL " <> show (reflectType (Proxy :: _ min)) <> " " <>
+    show i
 
 instance Reflectable min Int => Arbitrary (IntAL min) where
   arbitrary =
     let
       n = reflectType (Proxy :: _ min)
     in
-      IntAL <$> oneOf (NEA.cons'
-        ( elements $ NEA.singleton n )
-        [ chooseInt (n + 1) (n + 10)
-        , chooseInt (n + 11) (n + 100)
-        , chooseInt (n + 101) (n + 10000)
-        ])
+      IntAL <$> oneOf
+        ( NEA.cons'
+            (elements $ NEA.singleton n)
+            [ chooseInt (n + 1) (n + 10)
+            , chooseInt (n + 11) (n + 100)
+            , chooseInt (n + 101) (n + 10000)
+            ]
+        )
 
 -- | Convert an `Int` to an `IntAL min`, returning `Nothing` if the runtime
 -- | value of the input is smaller than `min`
 fromInt :: ∀ (min :: Int). Reflectable min Int => Int -> Maybe (IntAL min)
-fromInt i = if i >= reflectType (Proxy :: _ min) then Just (IntAL i) else Nothing
+fromInt i =
+  if i >= reflectType (Proxy :: _ min) then Just (IntAL i) else Nothing
 
 -- | A partial function, converting an `Int` to an `IntAL min`. Crashes at
 -- | runtime if the runtime value of the input is smaller than `min`
 fromInt'
   :: ∀ (min :: Int). Reflectable min Int => Partial => Int -> IntAL min
 fromInt' i =
-  if i >= reflectType (Proxy :: _ min) then IntAL i
-  else
-    crashWith $ "Cannot convert Int " <> show i <> " to IntAL " <>
-      show (reflectType (Proxy :: _ min))
+  let
+    minInt = reflectType (Proxy :: _ min)
+  in
+    if i >= minInt then IntAL i
+    else crashWith $
+      "Cannot convert Int " <> show i <> " to IntAL " <> show minInt
+
+clamp :: ∀ (min :: Int). Reflectable min Int => Int -> IntAL min
+clamp i =
+  let
+    minInt = reflectType (Proxy :: _ min)
+  in
+    if i >= minInt then IntAL i else IntAL minInt
 
 -- | Convert an `IntAL` to an `Int`
 toInt :: ∀ (min :: Int). IntAL min -> Int
@@ -90,6 +109,11 @@ toInt (IntAL i) = i
 -- | Convert an `IntAL` to a Number
 toNumber :: ∀ (min :: Int). IntAL min -> Number
 toNumber (IntAL i) = Int.toNumber i
+
+-- | Measure the distance between the runtime value of an `IntAL min` and the
+-- | type-level minimum value `min`, as an IntAL 0
+extent :: ∀ (min :: Int). Reflectable min Int => IntAL min -> IntAL 0
+extent (IntAL i) = IntAL $ reflectType (Proxy :: _ min) - i
 
 -- | Add two IntAL values with possibly different type-level minimums
 plus

@@ -21,6 +21,7 @@ module Data.Array.ArrayAL
   , append
   , appendArray
   , prependArray
+  , range
   , concat
   , intersperse
 
@@ -68,7 +69,7 @@ import Data.FastVect.FastVect as FV
 import Data.Foldable (class Foldable)
 import Data.FoldableWithIndex (class FoldableWithIndex)
 import Data.FunctorWithIndex (class FunctorWithIndex)
-import Data.Int.AtLeast (IntAL, fromInt')
+import Data.Int.AtLeast (IntAL, fromInt', toInt)
 import Data.Maybe (Maybe(Nothing, Just), fromJust)
 import Data.Reflectable (class Reflectable, reflectType)
 import Data.Semigroup.Foldable (class Foldable1, foldMap1DefaultL)
@@ -248,6 +249,19 @@ appendArray (ArrayAL xs) ys = ArrayAL $ xs <> ys
 
 prependArray :: ∀ (n :: Int) (a :: Type). Array a -> ArrayAL n a -> ArrayAL n a
 prependArray xs (ArrayAL ys) = ArrayAL $ xs <> ys
+
+-- | Construct an `ArrayAL 1` of `IntAL min`, starting with the (type-level)
+-- | minimum `min` and ending with the runtime value of the `IntAL min`
+range
+  :: ∀ (min :: Int). Reflectable min Int => IntAL min -> ArrayAL 1 (IntAL min)
+range i = ArrayAL $ toIntAL <$> values
+  where
+
+  toIntAL :: Int -> IntAL min
+  toIntAL j = unsafePartial $ fromInt' j
+
+  values :: Array Int
+  values = Array.range (reflectType (Proxy :: _ min)) (toInt i)
 
 concat
   :: ∀ (m :: Int) (n :: Int) (mn :: Int) (a :: Type)
