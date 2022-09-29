@@ -23,6 +23,7 @@ module Data.Array.ArrayAL
   , prependArray
   , range
   , fromLength
+  , fromLength'
   , concat
   , intersperse
 
