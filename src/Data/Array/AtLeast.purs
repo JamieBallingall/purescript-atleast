@@ -22,6 +22,7 @@ module Data.Array.ArrayAL
   , appendArray
   , prependArray
   , range
+  , fromLength
   , concat
   , intersperse
 
@@ -70,6 +71,7 @@ import Data.Foldable (class Foldable)
 import Data.FoldableWithIndex (class FoldableWithIndex)
 import Data.FunctorWithIndex (class FunctorWithIndex)
 import Data.Int.AtLeast (IntAL, fromInt', toInt)
+import Data.Int.AtLeast (fromLength) as IntAL
 import Data.Maybe (Maybe(Nothing, Just), fromJust)
 import Data.Reflectable (class Reflectable, reflectType)
 import Data.Semigroup.Foldable (class Foldable1, foldMap1DefaultL)
@@ -262,6 +264,26 @@ range i = ArrayAL $ toIntAL <$> values
 
   values :: Array Int
   values = Array.range (reflectType (Proxy :: _ min)) (toInt i)
+
+-- | Construct an `ArrayAL` of sequential `IntAL` from a starting `IntAL` and
+-- | the required length of the `ArrayAL`
+fromLength
+  :: ∀ (min_len :: Int) (min_val :: Int)
+   . Compare (-1) min_len LT
+  => IntAL min_val
+  -> IntAL min_len
+  -> ArrayAL min_len (IntAL min_val)
+fromLength first len = ArrayAL $ IntAL.fromLength first len
+
+-- | Construct an `ArrayAL` of sequential integers from a starting integer and
+-- | the required length of the `ArrayAL`
+fromLength'
+  :: ∀ (min :: Int). Compare (-1) min LT => Int -> IntAL min -> ArrayAL min Int
+fromLength' first len =
+  let
+    lenInt = toInt len
+  in
+    ArrayAL if lenInt == 0 then [] else Array.range first (first + lenInt - 1)
 
 concat
   :: ∀ (m :: Int) (n :: Int) (mn :: Int) (a :: Type)

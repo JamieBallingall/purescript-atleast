@@ -2,7 +2,9 @@ module Data.Int.AtLeast
   ( IntAL -- Constructor not exported. Use fromInt, fromInt' or clamp
   , fromInt
   , fromInt'
+  , fromMin
   , clamp
+  , fromLength
   , toInt
   , toNumber
   , extent
@@ -28,7 +30,7 @@ module Data.Int.AtLeast
 
 import Prelude hiding (lcm, gcd)
 
-import Data.Array (length) as Array
+import Data.Array (length, range) as Array
 import Data.Array.NonEmpty (NonEmptyArray, cons', length, singleton) as NEA
 import Data.Enum (class Enum)
 import Data.EuclideanRing (gcd) as Int
@@ -95,12 +97,30 @@ fromInt' i =
     else crashWith $
       "Cannot convert Int " <> show i <> " to IntAL " <> show minInt
 
+-- | Construct an `IntAL` equal to its type-level minimum
+fromMin :: ∀ (min :: Int). Reflectable min Int => IntAL min
+fromMin = IntAL $ reflectType (Proxy :: _ min)
+
+-- | Convert an `Int` to an `IntAL`, increasing the value to the type-level
+-- | minimum if required
 clamp :: ∀ (min :: Int). Reflectable min Int => Int -> IntAL min
 clamp i =
   let
     minInt = reflectType (Proxy :: _ min)
   in
     if i >= minInt then IntAL i else IntAL minInt
+
+-- | Construct an `Array` of `IntAL`. To construct an `ArrayAL` of `IntAL` see
+-- | Data.Array.AtLeast.fromLength'
+fromLength
+  :: ∀ (min_val :: Int) (min_len :: Int)
+   . Compare (-1) min_len LT
+  => IntAL min_val
+  -> IntAL min_len
+  -> Array (IntAL min_val)
+fromLength (IntAL first) (IntAL len) =
+  if len == 0 then []
+  else IntAL <$> Array.range first (first + len - 1)
 
 -- | Convert an `IntAL` to an `Int`
 toInt :: ∀ (min :: Int). IntAL min -> Int
