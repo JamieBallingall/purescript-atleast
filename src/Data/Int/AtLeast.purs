@@ -1,7 +1,8 @@
 module Data.Int.AtLeast
-  ( IntAL -- Constructor not exported. Use fromInt, fromInt' or clamp
+  ( IntAL -- Constructor not exported. Use fromInt, fromInt' or pullUp
   , fromInt
   , fromInt'
+  , pullUp
   , fromMin
   , clamp
   , fromLength
@@ -21,6 +22,7 @@ module Data.Int.AtLeast
   , divide
   , weaken
   , strengthen
+  , pullUp'
   , gcd
   , lcm
   , lengthArray
@@ -40,6 +42,7 @@ import Data.Reflectable (class Reflectable, reflectType)
 import Partial (crashWith)
 import Prim.Int (class Add, class Compare, class Mul)
 import Prim.Ordering (LT)
+import Prim.TypeError (class Warn, Text)
 import Test.QuickCheck.Arbitrary (class Arbitrary)
 import Test.QuickCheck.Gen (chooseInt, elements, oneOf)
 import Type.Proxy (Proxy(..))
@@ -97,13 +100,27 @@ fromInt' i =
     else crashWith $
       "Cannot convert Int " <> show i <> " to IntAL " <> show minInt
 
+-- | Convert an `Int` to an `IntAL`, increasing the value to the type-level
+-- | minimum if required
+pullUp :: ∀ (min :: Int). Reflectable min Int => Int -> IntAL min
+pullUp i =
+  let
+    minInt = reflectType (Proxy :: _ min)
+  in
+    IntAL $ if i >= minInt then i else minInt
+
 -- | Construct an `IntAL` equal to its type-level minimum
 fromMin :: ∀ (min :: Int). Reflectable min Int => IntAL min
 fromMin = IntAL $ reflectType (Proxy :: _ min)
 
 -- | Convert an `Int` to an `IntAL`, increasing the value to the type-level
 -- | minimum if required
-clamp :: ∀ (min :: Int). Reflectable min Int => Int -> IntAL min
+clamp
+  :: ∀ (min :: Int)
+   . Warn (Text "`clamp` is deprecated in favor of `pullUp`")
+  => Reflectable min Int
+  => Int
+  -> IntAL min
 clamp i =
   let
     minInt = reflectType (Proxy :: _ min)
@@ -211,6 +228,15 @@ strengthen
   => IntAL min_from
   -> Maybe (IntAL min_to)
 strengthen (IntAL i) = fromInt i
+
+-- | Increase the type-level minimum value, increasing the runtime value if
+-- | necessary
+pullUp'
+  :: ∀ (min_from :: Int) (min_to :: Int)
+   . Reflectable min_to Int
+  => IntAL min_from
+  -> IntAL min_to
+pullUp' (IntAL i) = pullUp i
 
 -- | The greatest common divisor of two IntAL values with possibly different
 -- | type-level minimums. Limited to types with strictly positive type-level
