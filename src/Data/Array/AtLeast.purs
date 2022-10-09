@@ -71,11 +71,12 @@ import Data.FastVect.FastVect as FV
 import Data.Foldable (class Foldable)
 import Data.FoldableWithIndex (class FoldableWithIndex)
 import Data.FunctorWithIndex (class FunctorWithIndex)
-import Data.Int.AtLeast (IntAL, fromInt', toInt)
 import Data.Int.AtLeast (fromLength) as IntAL
+import Data.Int.AtLeast (IntAL, fromInt', toInt)
 import Data.Maybe (Maybe(Nothing, Just), fromJust)
 import Data.Reflectable (class Reflectable, reflectType)
-import Data.Semigroup.Foldable (class Foldable1, foldMap1DefaultL)
+import Data.Semigroup.Foldable (class Foldable1)
+import Data.Semigroup.Foldable as Foldable1
 import Data.Traversable (class Traversable)
 import Data.TraversableWithIndex (class TraversableWithIndex)
 import Partial.Unsafe (unsafePartial)
@@ -107,12 +108,9 @@ derive newtype instance Traversable (ArrayAL n)
 derive newtype instance TraversableWithIndex Int (ArrayAL n)
 
 instance Compare n 0 GT => Foldable1 (ArrayAL n) where
-  foldMap1 = foldMap1DefaultL
-  foldr1 = foldr1Impl
-  foldl1 = foldl1Impl
-
-foreign import foldr1Impl :: forall n a. (a -> a -> a) -> ArrayAL n a -> a
-foreign import foldl1Impl :: forall n a. (a -> a -> a) -> ArrayAL n a -> a
+  foldMap1 = Foldable1.foldMap1DefaultL
+  foldr1 f xs = Foldable1.foldr1 f $ toNonEmptyArray xs
+  foldl1 f xs = Foldable1.foldl1 f $ toNonEmptyArray xs
 
 instance Apply (ArrayAL n) where
   apply (ArrayAL fab) (ArrayAL a) = ArrayAL (Array.zipWith ($) fab a)

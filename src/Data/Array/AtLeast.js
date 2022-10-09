@@ -17,25 +17,3 @@ export const offsetWithImpl = function (offset) {
     }
   }
 }
-
-export const foldr1Impl = function (f) {
-  return function (xs) {
-    let len = xs.length;
-    let acc = xs[len - 1];
-    for (let i = len - 2; i >= 0; i--) {
-      acc = f(xs[i])(acc);
-    }
-    return acc;
-  }
-}
-
-export const foldl1Impl = function (f) {
-  return function (xs) {
-    let acc = xs[0];
-    let len = xs.length;
-    for (let i = 1; i < len; i++) {
-      acc = f(acc)(xs[i]);
-    }
-    return acc;
-  }
-}
