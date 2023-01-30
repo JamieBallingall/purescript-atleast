@@ -10,6 +10,7 @@
   , "partial"
   , "prelude"
   , "quickcheck"
+  , "unfoldable"
   , "unsafe-coerce"
   ]
 , packages = ./packages.dhall
